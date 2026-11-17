@@ -1,0 +1,146 @@
+.agents/skills/benchmark-optimization-loop/SKILL.md
+  h_29d505973d5b34 1-71
+.agents/skills/error-handling/SKILL.md
+  h_29d505973d5b34 1-377
+.agents/skills/latency-critical-systems/SKILL.md
+  h_29d505973d5b34 1-75
+.agents/skills/mle-workflow/SKILL.md
+  h_29d505973d5b34 1-348
+.env.example
+  h_29d505973d5b34 1-77
+.gitignore
+  h_29d505973d5b34 1-42
+CLAUDE.md
+  h_29d505973d5b34 1-22
+"ESCOPO DO PROJETO.md"
+  h_29d505973d5b34 1-99
+GEMINI.md
+  h_29d505973d5b34 1
+README.md
+  h_29d505973d5b34 1-170
+backtest_data.py
+  h_29d505973d5b34 1-163
+backtest_features_compare.py
+  h_29d505973d5b34 1-220
+backtest_m15.py
+  h_29d505973d5b34 1-218
+backtest_mtf_compare.py
+  h_29d505973d5b34 1-190
+backtest_mtf_data.py
+  h_29d505973d5b34 1-73
+backtest_sniper_m15.py
+  h_29d505973d5b34 1-210
+backtest_tf_compare.py
+  h_29d505973d5b34 1-275
+brain.py
+  h_29d505973d5b34 1-374
+collect_candles.py
+  h_29d505973d5b34 1-196
+conector/__init__.py
+  h_29d505973d5b34 1-6
+config.py
+  h_29d505973d5b34 1-336
+cvar_risk.py
+  h_29d505973d5b34 1-230
+data/brain_weights.json
+  h_29d505973d5b34 1-7
+data/candles_AUDUSD_M5_90d.csv
+  h_29d505973d5b34 1-19001
+data/candles_AUDUSD_OTC_M1_90d.csv
+  h_29d505973d5b34 1-87470
+data/candles_AUDUSD_OTC_M5_90d.csv
+  h_29d505973d5b34 1-26001
+data/candles_EURJPY_M5_90d.csv
+  h_29d505973d5b34 1-19001
+data/candles_EURJPY_OTC_M1_90d.csv
+  h_29d505973d5b34 1-87431
+data/candles_EURJPY_OTC_M5_90d.csv
+  h_29d505973d5b34 1-26001
+data/candles_EURUSD_M5_90d.csv
+  h_29d505973d5b34 1-19001
+data/candles_EURUSD_OTC_M1_90d.csv
+  h_29d505973d5b34 1-86487
+data/candles_EURUSD_OTC_M5_90d.csv
+  h_29d505973d5b34 1-26001
+data/candles_USDCHF_OTC_M1_90d.csv
+  h_29d505973d5b34 1-87471
+data/candles_USDCHF_OTC_M5_90d.csv
+  h_29d505973d5b34 1-26001
+data/checkpoint_after.json
+  h_29d505973d5b34 1-76
+data/checkpoint_before.json
+  h_29d505973d5b34 1-74
+data/live_trades.csv
+  h_29d505973d5b34 1-2177
+dummy_conector.py
+  h_29d505973d5b34 1-86
+ema_wave.py
+  h_29d505973d5b34 1-160
+ema_wave_indicator.pine
+  h_29d505973d5b34 1-83
+ema_wave_iqoption.lua
+  h_29d505973d5b34 1-69
+errors.py
+  h_29d505973d5b34 1-60
+features.py
+  h_29d505973d5b34 1-325
+gui_dashboard.py
+  h_29d505973d5b34 1-382
+"iniciar o robo.txt"
+  h_29d505973d5b34 1-3
+iq_client.py
+  h_29d505973d5b34 1-492
+iq_constants.py
+  h_29d505973d5b34 1-75
+main.py
+  h_29d505973d5b34 1-809
+micro_sniper.py
+  h_29d505973d5b34 1-202
+ml_core.py
+  h_29d505973d5b34 1-360
+online_learning.py
+  h_29d505973d5b34 1-312
+operate_real_test.py
+  h_29d505973d5b34 1-161
+quant_factors.py
+  h_29d505973d5b34 1-80
+radar.py
+  h_29d505973d5b34 1-152
+razuk-bot.md
+  h_29d505973d5b34 1-107
+requirements.txt
+  h_29d505973d5b34 1-12
+retrain_real_target.py
+  h_29d505973d5b34 1-210
+risk.py
+  h_29d505973d5b34 1-290
+scripts/migrate_live_trades.py
+  h_29d505973d5b34 1-105
+smc_detector.py
+  h_29d505973d5b34 1-164
+telemetry.py
+  h_29d505973d5b34 1-149
+test_bot.py
+  h_29d505973d5b34 1-157
+test_sniper.py
+  h_29d505973d5b34 1-134
+train_ml.py
+  h_29d505973d5b34 1-271
+trend_sr.py
+  h_29d505973d5b34 1-235
+ui_dashboard.py
+  h_29d505973d5b34 1-288
+volatility_models.py
+  h_29d505973d5b34 1-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "532fe8bdd0f3c1d5026876e07ca687184617a078",
+  "prompts": {},
+  "humans": {
+    "h_29d505973d5b34": {
+      "author": "Fran981259 <209047582+Fran981259@users.noreply.github.com>"
+    }
+  }
+}
