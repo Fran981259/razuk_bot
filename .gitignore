@@ -1,0 +1,42 @@
+# Ambientes Virtuais e Dependências
+.venv/
+venv/
+ENV/
+env/
+node_modules/
+
+# Segredos e Configurações Locais
+.env
+.env*.local
+.session_ssid
+*.pem
+*.key
+
+# Python Cache e Compilação
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Builds e Distribuições
+dist/
+build/
+*.egg-info/
+
+# Logs e Dados Temporários
+*.log
+logs/
+data/*.bak*
+data/*backup*
+data/*pre_sync*
+
+# Sistema Operacional e IDEs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/
+.junie/

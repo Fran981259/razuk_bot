@@ -1,0 +1,76 @@
+{
+  "checkpoint": "AFTER_BATTERY_TRAINING_90D",
+  "timestamp_utc": "2026-10-19T00:21:41.657988+00:00",
+  "total_candles_processed": 348775,
+  "training_samples_used": 100000,
+  "datasets": [
+    "AUDUSD-OTC",
+    "EURJPY-OTC",
+    "USDCHF-OTC",
+    "EURUSD-OTC"
+  ],
+  "cv_metrics": {
+    "auc": 0.5015,
+    "wr_threshold_50": 49.51,
+    "wr_threshold_52": 50.02,
+    "wr_threshold_55": 50.21,
+    "wr_threshold_58": 49.15,
+    "wr_threshold_60": 46.79
+  },
+  "individual_results": [
+    {
+      "par": "AUDUSD-OTC",
+      "amostras": 87449,
+      "auc_medio": 0.5021494760510822,
+      "wr_base": 50.046312707978366,
+      "wr_50": 50.12822345987461,
+      "wr_55": 50.15528618231029,
+      "wr_58": 49.48177649508995
+    },
+    {
+      "par": "EURJPY-OTC",
+      "amostras": 87410,
+      "auc_medio": 0.49749734844172666,
+      "wr_base": 49.89360485070358,
+      "wr_50": 49.589051296507016,
+      "wr_55": 50.97742532440039,
+      "wr_58": 53.39450053039725
+    },
+    {
+      "par": "USDCHF-OTC",
+      "amostras": 87450,
+      "auc_medio": 0.5011649744224066,
+      "wr_base": 48.899942824471125,
+      "wr_50": 49.00881635544788,
+      "wr_55": 46.03795320623757,
+      "wr_58": 46.99790707104382
+    },
+    {
+      "par": "EURUSD-OTC",
+      "amostras": 86466,
+      "auc_medio": 0.5001260795563053,
+      "wr_base": 49.64032105104897,
+      "wr_50": 49.687275074566685,
+      "wr_55": 49.30557677688216,
+      "wr_58": 50.06428380901574
+    }
+  ],
+  "feature_importances": {
+    "feat_roc_5": 616,
+    "feat_atr_20": 583,
+    "feat_lower_shadow": 527,
+    "feat_adx": 524,
+    "feat_body_ratio": 510,
+    "feat_afastamento_pct": 498,
+    "feat_bollinger_pct_b": 498,
+    "feat_macd_hist": 496,
+    "feat_ema21_slope": 472,
+    "feat_cci_20": 466,
+    "feat_upper_shadow": 448,
+    "feat_rsi_14": 436,
+    "feat_afastamento_cross": 39,
+    "feat_engulfing": 33,
+    "feat_ema_alignment": 23,
+    "feat_inside_bar": 19
+  }
+}

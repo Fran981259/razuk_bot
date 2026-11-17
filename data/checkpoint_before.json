@@ -1,0 +1,74 @@
+{
+  "checkpoint": "BEFORE_ALPHA_UPDATE",
+  "timestamp_utc": "2026-10-18T20:14:55.583790+00:00",
+  "features_version": "v1_original_16",
+  "feature_columns": [
+    "feat_body_ratio",
+    "feat_upper_shadow",
+    "feat_lower_shadow",
+    "feat_engulfing",
+    "feat_inside_bar",
+    "feat_ema_alignment",
+    "feat_ema21_slope",
+    "feat_adx",
+    "feat_afastamento_pct",
+    "feat_afastamento_cross",
+    "feat_rvol",
+    "feat_tmz_v3_vol",
+    "feat_tmz_v2_vol",
+    "feat_tmz_v1_vol",
+    "feat_atr_20",
+    "feat_bollinger_pct_b"
+  ],
+  "total_trades": 484,
+  "wins": 235,
+  "losses": 249,
+  "win_rate_pct": 48.55,
+  "win_rate_by_par": {
+    "count": {
+      "AUDUSD-OTC": 66,
+      "EURGBP-OTC": 80,
+      "EURJPY-OTC": 80,
+      "EURUSD-OTC": 114,
+      "GBPUSD-OTC": 56,
+      "NZDUSD-OTC": 37,
+      "USDCAD-OTC": 25,
+      "USDCHF-OTC": 26
+    },
+    "win_rate": {
+      "AUDUSD-OTC": 59.09,
+      "EURGBP-OTC": 42.5,
+      "EURJPY-OTC": 53.75,
+      "EURUSD-OTC": 47.37,
+      "GBPUSD-OTC": 42.86,
+      "NZDUSD-OTC": 43.24,
+      "USDCAD-OTC": 44.0,
+      "USDCHF-OTC": 53.85
+    }
+  },
+  "feature_importances": {
+    "feat_body_ratio": 182,
+    "feat_upper_shadow": 130,
+    "feat_lower_shadow": 151,
+    "feat_engulfing": 6,
+    "feat_inside_bar": 7,
+    "feat_ema_alignment": 11,
+    "feat_ema21_slope": 147,
+    "feat_adx": 196,
+    "feat_afastamento_pct": 141,
+    "feat_afastamento_cross": 29,
+    "feat_rvol": 0,
+    "feat_tmz_v3_vol": 0,
+    "feat_tmz_v2_vol": 0,
+    "feat_tmz_v1_vol": 0,
+    "feat_atr_20": 253,
+    "feat_bollinger_pct_b": 196
+  },
+  "model_updated_at": "2026-10-18T19:44:01+00:00",
+  "dead_features_zero_variance": [
+    "feat_rvol",
+    "feat_tmz_v3_vol",
+    "feat_tmz_v2_vol",
+    "feat_tmz_v1_vol"
+  ]
+}

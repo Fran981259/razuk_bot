@@ -1,0 +1,3 @@
+cd "/home/razuk/Área de trabalho/segundo_cerebro/02-Projetos/razuk bot"
+source .venv/bin/activate
+python main.py

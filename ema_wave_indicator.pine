@@ -1,0 +1,83 @@
+//@version=5
+indicator("EMA Wave + Clock Filter (Raghee Horner)", overlay=true, precision=2)
+
+// =============================================================================
+// 1. PARÂMETROS E CONFIGURAÇÕES
+// =============================================================================
+grp_wave   = "Configurações da Onda (EMA Wave)"
+i_period   = input.int(34, "Período da Onda (Fibonacci)", minval=5, maxval=200, group=grp_wave)
+i_slopeN   = input.int(3, "Barras para Inclinação", minval=1, maxval=10, group=grp_wave)
+
+grp_clock  = "Filtro do Relógio Analógico (Clock Filter)"
+i_angBull  = input.float(30.0, "Ângulo Mínimo Alta (12h-2h)", minval=10.0, maxval=80.0, group=grp_clock)
+i_angBear  = input.float(-45.0, "Ângulo Mínimo Baixa (3h30-5h)", minval=-80.0, maxval=-10.0, group=grp_clock)
+
+grp_colors = "Cores e Interface"
+c_bull     = input.color(color.new(#00c853, 0), "Cor Alta Forte", group=grp_colors)
+c_bear     = input.color(color.new(#d50000, 0), "Cor Baixa Forte", group=grp_colors)
+c_neut     = input.color(color.new(#ffab00, 0), "Cor Mercado Lateral", group=grp_colors)
+c_fillA    = input.int(80, "Transparência do Preenchimento (0-100)", minval=0, maxval=100, group=grp_colors)
+
+// =============================================================================
+// 2. CÁLCULO DA EMA WAVE (34 HIGH, CLOSE, LOW)
+// =============================================================================
+waveHigh  = ta.ema(high, i_period)
+waveClose = ta.ema(close, i_period)
+waveLow   = ta.ema(low, i_period)
+
+// Normalização da inclinação pelo ATR para cálculo angular
+atrNorm   = ta.atr(14)
+deltaEma  = waveClose - waveClose[i_slopeN]
+slopeNorm = (deltaEma / (atrNorm * i_slopeN)) * 2.5
+waveAngle = math.todegrees(math.atan(slopeNorm))
+
+// =============================================================================
+// 3. CLASSIFICAÇÃO DO RELÓGIO ANALÓGICO
+// =============================================================================
+isBullishStrong = waveAngle >= i_angBull
+isBearishStrong = waveAngle <= i_angBear
+isNeutral       = not isBullishStrong and not isBearishStrong
+
+colorCurrent = isBullishStrong ? c_bull : (isBearishStrong ? c_bear : c_neut)
+colorFill    = color.new(colorCurrent, c_fillA)
+
+// =============================================================================
+// 4. PLOTAGEM DAS MÉDIAS E BANDA
+// =============================================================================
+pHigh  = plot(waveHigh,  "Wave High",  color=colorCurrent, linewidth=1)
+pClose = plot(waveClose, "Wave Close", color=colorCurrent, linewidth=2)
+pLow   = plot(waveLow,   "Wave Low",   color=colorCurrent, linewidth=1)
+fill(pHigh, pLow, color=colorFill, title="Wave Band Fill")
+
+// =============================================================================
+// 5. GATILHOS OPERACIONAIS E SINAIS
+// =============================================================================
+condBuy  = isBullishStrong and (low <= waveHigh) and (close >= waveLow) and (close > open)
+condSell = isBearishStrong and (high >= waveLow) and (close <= waveHigh) and (close < open)
+
+plotshape(condBuy,  title="Sinal CALL (Compra)", style=shape.triangleup,   location=location.belowbar, color=color.green, size=size.small, text="CALL")
+plotshape(condSell, title="Sinal PUT (Venda)",   style=shape.triangledown, location=location.abovebar, color=color.red,   size=size.small, text="PUT")
+
+alertcondition(condBuy,  title="Alerta CALL (EMA Wave)", message="EMA Wave: Gatilho CALL confirmado em {{ticker}}!")
+alertcondition(condSell, title="Alerta PUT (EMA Wave)",  message="EMA Wave: Gatilho PUT confirmado em {{ticker}}!")
+
+// =============================================================================
+// 6. DASHBOARD / TABELA DO RELÓGIO (CANTO SUPERIOR DIREITO)
+// =============================================================================
+var table dashboard = table.new(position.top_right, 2, 4, bgcolor=color.new(color.black, 20), border_color=color.gray, border_width=1)
+if barstate.islast
+    string txtStatus = isBullishStrong ? "ALTA FORTE (12h-2h)" : (isBearishStrong ? "BAIXA FORTE (3h30-5h)" : "LATERAL (3h/9h)")
+    string txtPermis = isBullishStrong ? "APENAS COMPRA (CALL)" : (isBearishStrong ? "APENAS VENDA (PUT)" : "FORA DO MERCADO")
+    color  clrStatus = isBullishStrong ? color.green : (isBearishStrong ? color.red : color.orange)
+
+    table.cell(dashboard, 0, 0, "EMA WAVE CLOCK", bgcolor=color.new(color.black, 40), text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 0, "STATUS",         bgcolor=color.new(color.black, 40), text_color=color.white, text_size=size.small)
+
+    table.cell(dashboard, 0, 1, "Regime de Mercado", text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 1, txtStatus,           text_color=clrStatus,    text_size=size.small)
+
+    table.cell(dashboard, 0, 2, "Ângulo da Onda",    text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 2, str.tostring(waveAngle, "#.##") + "°", text_color=color.white, text_size=size.small)
+
+    table.cell(dashboard, 0, 3, "Permissão Trade",   text_color=color.white, text_size=size.small)
+    table.cell(dashboard, 1, 3, txtPermis,           text_color=clrStatus,    text_size=size.small)
