@@ -1,0 +1,16 @@
+olymptrade/olymp_client.py
+  h_a9c79159c35312 78-90
+olymptrade/test_connection.py
+  h_a9c79159c35312 38-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b43b8e284a3aa5413bddd6fe5da3689cd2a175fb",
+  "prompts": {},
+  "humans": {
+    "h_a9c79159c35312": {
+      "author": "Fran981259 <comunidadetrader@gmail.com>"
+    }
+  }
+}
