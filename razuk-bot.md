@@ -14,6 +14,7 @@
 ## Folder Structure
 /                   → Raiz do projeto
   conector/         → Pacote conector com a corretora IQ Option
+  olymptrade/       → Pacote conector dedicado e isolado para Olymp Trade (FTT WebSocket)
   data/             → Datasets históricos OHLCV (90d), live_trades.csv e checkpoints
   models/           → Modelos serializados de IA (lgbm_model.joblib)
 
@@ -47,6 +48,8 @@ backtest_mtf_data.py→ Reamostragem concorrente M5, M15, M30 e H1
 backtest_mtf_compare.py → Disputa MTF Independente vs Cascata Macro H1
 test_bot.py         → Bateria de testes de ponta a ponta do fluxo assíncrono
 dummy_conector.py   → Conector mock fallback para testes offline e simulações
+olymptrade/olymp_client.py → Conector assíncrono WebSocket nativo para Olymp Trade (FTT)
+olymptrade/test_connection.py → Script de validação e teste de conexão com Olymp Trade
 .env.example        → Modelo de variáveis de ambiente com documentação dos parâmetros
 .env                → Configurações ativas do usuário (protegido no .gitignore)
 requirements.txt    → Dependências Python do projeto
