@@ -293,11 +293,11 @@ class GestaoRiscoConfig(BaseConfigSection):
         description="Fração conservadora do Critério de Kelly (entre 0.05 e 0.50).",
     )
     max_daily_drawdown_pct: float = Field(
-        default=0.05,
+        default=0.40,
         alias="MAX_DAILY_DRAWDOWN_PCT",
         ge=0.01,
-        le=0.20,
-        description="Limite diário de rebaixamento da banca antes do bloqueio (1% a 20%).",
+        le=0.60,
+        description="Limite diário de rebaixamento da banca antes do bloqueio (padrão 40% para suportar ciclo de Martingale).",
     )
     max_consecutive_losses: int = Field(
         default=3,
@@ -311,6 +311,37 @@ class GestaoRiscoConfig(BaseConfigSection):
         alias="COOLDOWN_MINUTES_AFTER_LOSS_STREAK",
         ge=0,
         description="Tempo de espera em minutos após limite de derrotas consecutivas (60 min padrão para proteção em produção).",
+    )
+    martingale_enabled: bool = Field(
+        default=True,
+        alias="MARTINGALE_ENABLED",
+        description="Ativa estratégia de recuperação via Martingale de até 2 níveis.",
+    )
+    martingale_base_pct: float = Field(
+        default=0.05,
+        alias="MARTINGALE_BASE_PCT",
+        ge=0.01,
+        le=0.20,
+        description="Percentual do capital da banca na primeira entrada (padrão: 0.05 = 5%).",
+    )
+    martingale_max_levels: int = Field(
+        default=2,
+        alias="MARTINGALE_MAX_LEVELS",
+        ge=1,
+        le=5,
+        description="Número máximo de níveis de Martingale (padrão: 2 = Gale 1 e Gale 2).",
+    )
+    martingale_multiplier: float = Field(
+        default=2.2,
+        alias="MARTINGALE_MULTIPLIER",
+        ge=1.5,
+        le=3.0,
+        description="Multiplicador do valor da entrada após loss (padrão: 2.2x).",
+    )
+    martingale_same_direction: bool = Field(
+        default=True,
+        alias="MARTINGALE_SAME_DIRECTION",
+        description="Se True, repete a mesma direção da entrada anterior durante os níveis de Gale.",
     )
 
 class BotConfig(BaseConfigSection):

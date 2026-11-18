@@ -110,6 +110,17 @@ class RiskManager:
 
         p, b = win_probability, payout
 
+        # Estratégia de Martingale: primeira entrada com percentual fixo do capital (padrão 5% da banca)
+        if getattr(self._config, "martingale_enabled", False):
+            base_pct = getattr(self._config, "martingale_base_pct", 0.05)
+            lote_base = round(self.banca_atual * base_pct, 2)
+            lote_final = max(lote_base, _ENTRADA_MINIMA)
+            self._logger.info(
+                "Dimensionamento Martingale (Mão Base %.1f%%) | Banca=R$%.2f | Lote=R$%.2f",
+                base_pct * 100, self.banca_atual, lote_final
+            )
+            return lote_final
+
         # Se houver valor fixo configurado (ex: $2.00 para treino), respeita o valor fixo
         if getattr(self._config, "stake_fixa", 0.0) > 0.0:
             lote_fixo = float(self._config.stake_fixa)
@@ -147,6 +158,12 @@ class RiskManager:
             tamanho_ordem,
         )
         return tamanho_ordem
+
+    def calculate_gale_stake(self, lote_anterior: float) -> float:
+        """Calcula o valor do lote para a próxima entrada de Martingale."""
+        mult = getattr(self._config, "martingale_multiplier", 2.2)
+        lote_gale = round(lote_anterior * mult, 2)
+        return max(lote_gale, _ENTRADA_MINIMA)
 
     def register_trade_result(self, pnl: float, was_win: bool) -> None:
         """Registra o resultado financeiro de uma operação concluída.

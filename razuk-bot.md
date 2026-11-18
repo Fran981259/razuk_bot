@@ -73,6 +73,7 @@ requirements.txt    → Dependências Python do projeto
 8. Telemetria de Hot Path (latency-critical-systems): Rastreamento de latência em milissegundos de coleta, extração de features, inferência e envio de ordens.
 9. Benchmark Loop & Gate Numérico (benchmark-optimization-loop): Otimizações numéricas exigem portão de equivalência numérica (diff=0.0) e medição de redução de latência.
 10. Confluência Institucional SMC & Risco CVaR (Vibe-Trading): Entradas ganham confluência por mitigação de Order Blocks, filtram exaustão de Garman-Klass e amortecem Kelly via CVaR.
+11. Mini-Estratégia Martingale (Recuperação Rápida): Primeira entrada calculada com 5% do capital da banca (MARTINGALE_BASE_PCT=0.05). Se win, ciclo encerrado aguardando próximo radar. Se loss, executa Martingale imediato na próxima vela na mesma direção com multiplicador 2.2x (MARTINGALE_MULTIPLIER=2.2), até o limite de 2 níveis (Gale 1 e Gale 2). Limite de Drawdown diário ajustado para 40% (MAX_DAILY_DRAWDOWN_PCT=0.40) para acomodar com segurança o ciclo de Gale.
 
 ## Direção Final do Bot (Roadmap de Produção)
 - [x] Conexão WebSocket assíncrona oficial de alta velocidade
@@ -102,6 +103,7 @@ requirements.txt    → Dependências Python do projeto
 - [x] Motor MicroSniper & Telemetria em Tempo Real: Pullback estrutural C1 + Rejeição Tipo B + Janela 1/4 + Revalidação Ativa
 - [x] Bug fix MicroSniper Telemetria: Subscrição dinâmica de streaming `candle-generated` no WebSocket e eliminação de cache estático no `get_current_price`
 - [x] Resolução Nativa Multi-Timeframe M15: Coleta direta de 100 velas nativas por timeframe, eliminando erro de DataFrame curto (33 < 85)
+- [x] Mini-Estratégia Martingale Integrada: Entrada inicial de 5% da banca, até 2 Gales (2.2x) na próxima vela na mesma direção, sincronizado ao risco diário de 40%
 
-## Last updated: 2026-11-05 (Retreino de Modelo com Target Real `is_win`, 26 Features e Deploy na VPS)
+## Last updated: 2026-11-17 (Implementação e Testes da Mini-Estratégia Martingale: 5% Base, 2 Gales a 2.2x)
 
