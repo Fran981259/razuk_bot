@@ -1,0 +1,26 @@
+olymptrade/.env.olymptrade.example
+  h_a9c79159c35312 1-18
+olymptrade/README.md
+  h_a9c79159c35312 1-66
+olymptrade/__init__.py
+  h_a9c79159c35312 1-17
+olymptrade/olymp_client.py
+  h_a9c79159c35312 1-475
+olymptrade/olymp_constants.py
+  h_a9c79159c35312 1-75
+olymptrade/test_connection.py
+  h_a9c79159c35312 1-86
+razuk-bot.md
+  h_a9c79159c35312 17,51-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e097efd4db26332d0dfeb2c8dde7cc1754238946",
+  "prompts": {},
+  "humans": {
+    "h_a9c79159c35312": {
+      "author": "Fran981259 <comunidadetrader@gmail.com>"
+    }
+  }
+}
