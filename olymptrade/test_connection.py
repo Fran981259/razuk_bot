@@ -35,9 +35,20 @@ async def main() -> None:
 
     # 1. Carrega token do ambiente ou arquivo .olymp_token
     token = os.getenv("OLYMP_TOKEN")
-    token_file = Path(".olymp_token")
-    if not token and token_file.exists():
-        token = token_file.read_text().strip()
+    if not token:
+        token_candidates = [
+            Path(".olymp_token"),
+            Path(__file__).parent / ".olymp_token",
+            Path(__file__).parent.parent / ".olymp_token",
+        ]
+        for p in token_candidates:
+            if p.exists():
+                try:
+                    token = p.read_text().strip()
+                    if token:
+                        break
+                except Exception:
+                    pass
 
     if not token:
         print("\n⚠️ AVISO: Nenhum token de sessão 'OLYMP_TOKEN' encontrado!")

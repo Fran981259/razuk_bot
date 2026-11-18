@@ -75,14 +75,19 @@ class OlympTradeClient:
 
     def _load_cached_token(self) -> Optional[str]:
         """Tenta carregar token de sessão em cache do arquivo .olymp_token."""
-        token_file = Path(".olymp_token")
-        if token_file.exists():
-            try:
-                cached = token_file.read_text().strip()
-                if cached:
-                    return cached
-            except Exception:
-                pass
+        candidates = [
+            Path(".olymp_token"),
+            Path(__file__).parent / ".olymp_token",
+            Path(__file__).parent.parent / ".olymp_token",
+        ]
+        for p in candidates:
+            if p.exists():
+                try:
+                    cached = p.read_text().strip()
+                    if cached:
+                        return cached
+                except Exception:
+                    pass
         return None
 
     def _save_cached_token(self, token: str) -> None:
