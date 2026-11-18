@@ -100,10 +100,7 @@ class BotOrchestrator:
             if tf in _TF_SECONDS
         } or {"M5": 300, "M15": 900}
         self._pending_trades: int = 0
-        self._max_simultaneous: int = (
-            1 if getattr(self.config.gestao_risco, "martingale_enabled", False)
-            else self.config.trading.max_simultaneous_trades
-        )
+        self._max_simultaneous: int = self.config.trading.max_simultaneous_trades
         self._ultimo_dia: Optional[datetime.date] = None
 
     async def _ensure_connection(self) -> None:
@@ -205,178 +202,143 @@ class BotOrchestrator:
         """Envia ordem de entrada e aguarda expiração de forma não-bloqueante."""
         exp_min = expiracao_minutos if expiracao_minutos is not None else self.config.trading.expiration_minutes
         self._pending_trades += 1
-        current_lote = lote
-        current_gale = 0
-        max_gales = (
-            self.config.gestao_risco.martingale_max_levels
-            if getattr(self.config.gestao_risco, "martingale_enabled", False)
-            else 0
+        self.logger.info(
+            "Disparando %s em %s | Lote: $%.2f | P(Win): %.2f%% | Exp: %dm",
+            direcao.upper(), par, lote, prob_win * 100, exp_min,
         )
-
         try:
-            while True:
-                gale_tag = f" [GALE {current_gale}]" if current_gale > 0 else ""
-                self.logger.info(
-                    "Disparando %s em %s%s | Lote: $%.2f | P(Win): %.2f%% | Exp: %dm",
-                    direcao.upper(), par, gale_tag, current_lote, prob_win * 100, exp_min,
-                )
-                saldo_antes = await self.conector.get_balance()
-                t_buy_start = time.perf_counter()
-                resp = await self.conector.buy(
-                    par=par, valor=current_lote, direcao=direcao, expiracao_minutos=exp_min
-                )
-                t_buy_ms = (time.perf_counter() - t_buy_start) * 1000
-                self.telemetry.record("order", t_buy_ms)
+            saldo_antes = await self.conector.get_balance()
+            t_buy_start = time.perf_counter()
+            resp = await self.conector.buy(
+                par=par, valor=lote, direcao=direcao, expiracao_minutos=exp_min
+            )
+            t_buy_ms = (time.perf_counter() - t_buy_start) * 1000
+            self.telemetry.record("order", t_buy_ms)
 
-                if isinstance(resp, dict) and "message" in resp and "id" not in resp:
-                    err = BrokerOrderRefusalError(par=par, reason=resp["message"])
-                    self.logger.warning("Corretora recusou ordem%s (latência: %.1fms): %s", gale_tag, t_buy_ms, err)
-                    break
-                order_id = resp.get("id") if isinstance(resp, dict) else resp
-                exp_ts = resp.get("exp_timestamp") if isinstance(resp, dict) else None
-                restante = max(0, exp_ts - int(time.time())) if exp_ts else (exp_min * 60)
-                self.logger.info(
-                    "Ordem confirmada em %s%s (ID: %s | %.1fms). Monitorando expiração (%ds restantes)...",
-                    par, gale_tag, order_id, t_buy_ms, restante,
-                )
+            if isinstance(resp, dict) and "message" in resp and "id" not in resp:
+                err = BrokerOrderRefusalError(par=par, reason=resp["message"])
+                self.logger.warning("Corretora recusou ordem (latência: %.1fms): %s", t_buy_ms, err)
+                return
+            order_id = resp.get("id") if isinstance(resp, dict) else resp
+            exp_ts = resp.get("exp_timestamp") if isinstance(resp, dict) else None
+            restante = max(0, exp_ts - int(time.time())) if exp_ts else (exp_min * 60)
+            self.logger.info(
+                "Ordem confirmada em %s (ID: %s | %.1fms). Monitorando expiração (%ds restantes)...",
+                par, order_id, t_buy_ms, restante,
+            )
 
-                # Payout decimal da operação (ex: 0.85 = 85%)
-                payout = getattr(self.conector, "get_payout", lambda p: 0.85)(par)
-                if isinstance(resp, dict):
-                    if "profit_percent" in resp:
-                        payout = float(resp["profit_percent"]) / 100.0
-                    elif "profit_income" in resp:
-                        payout = (float(resp["profit_income"]) - 100.0) / 100.0
+            # Payout decimal da operação (ex: 0.85 = 85%)
+            payout = getattr(self.conector, "get_payout", lambda p: 0.85)(par)
+            if isinstance(resp, dict):
+                if "profit_percent" in resp:
+                    payout = float(resp["profit_percent"]) / 100.0
+                elif "profit_income" in resp:
+                    payout = (float(resp["profit_income"]) - 100.0) / 100.0
 
-                # 1. Tenta capturar a resolução oficial da ordem emitida pela corretora (option-closed via WebSocket)
-                opt_result: Optional[Dict[str, Any]] = None
-                if hasattr(self.conector, "wait_for_option_result") and order_id:
-                    opt_result = await self.conector.wait_for_option_result(order_id, timeout=restante + 6.0)
+            # 1. Tenta capturar a resolução oficial da ordem emitida pela corretora (option-closed via WebSocket)
+            opt_result: Optional[Dict[str, Any]] = None
+            if hasattr(self.conector, "wait_for_option_result") and order_id:
+                opt_result = await self.conector.wait_for_option_result(order_id, timeout=restante + 6.0)
 
-                strike = float(resp.get("value") or 0.0) if isinstance(resp, dict) else 0.0
-                close_price = 0.0
+            strike = float(resp.get("value") or 0.0) if isinstance(resp, dict) else 0.0
+            close_price = 0.0
 
-                if opt_result is not None:
-                    # Resolução oficial direta da corretora
-                    win_str = str(opt_result.get("win", "")).lower()
-                    profit_amount = float(opt_result.get("profit_amount", 0.0))
-                    amount = float(opt_result.get("amount", current_lote))
-                    close_price = float(opt_result.get("close_quote") or opt_result.get("close_price") or 0.0)
-                    if not strike:
-                        strike = float(opt_result.get("value") or 0.0)
+            if opt_result is not None:
+                # Resolução oficial direta da corretora
+                win_str = str(opt_result.get("win", "")).lower()
+                profit_amount = float(opt_result.get("profit_amount", 0.0))
+                amount = float(opt_result.get("amount", lote))
+                close_price = float(opt_result.get("close_quote") or opt_result.get("close_price") or 0.0)
+                if not strike:
+                    strike = float(opt_result.get("value") or 0.0)
 
-                    if win_str == "win" or profit_amount > amount:
-                        is_win, is_tie = True, False
-                        # BUG FIX #2: usa profit_amount real da corretora como base do lucro líquido
-                        pnl = round(profit_amount - amount, 2) if profit_amount > amount else round(current_lote * payout, 2)
-                    elif win_str in {"equal", "tie"} or (profit_amount == amount and profit_amount > 0):
-                        is_win, is_tie = False, True
-                        pnl = 0.0
-                    else:
-                        is_win, is_tie = False, False
-                        pnl = -round(current_lote, 2)
-                else:
-                    # 2. Fallback: Aguarda término da expiração e consulta a vela exata que expirou (penúltima vela)
-                    restante_agora = max(0, exp_ts - int(time.time())) if exp_ts else 0
-                    if restante_agora > 0:
-                        await asyncio.sleep(restante_agora + 2.0)
-
-                    velas = await self.conector.get_candles(
-                        par=par, timeframe=self.config.trading.timeframe, contagem=3
-                    )
-                    trade_candle = None
-                    if velas and exp_ts:
-                        # Busca vela cujo início seja exatamente tf_seg segundos antes da expiração
-                        alvo_from = exp_ts - self._tf_seg
-                        for v in reversed(velas):
-                            if abs(v.get("from", 0) - alvo_from) <= 10:
-                                trade_candle = v
-                                break
-                    if not trade_candle and velas:
-                        trade_candle = velas[-2] if len(velas) >= 2 else velas[-1]
-
-                    close_price = float(trade_candle.get("close", 0.0)) if trade_candle else 0.0
-                    dir_norm = direcao.strip().upper()
-                    is_win = (close_price > strike) if dir_norm == "CALL" else (close_price < strike)
-                    is_tie = (close_price == strike) or (strike <= 0.0 or close_price <= 0.0)
-                    pnl = round(current_lote * payout, 2) if is_win else (-round(current_lote, 2) if not is_tie else 0.0)
-
-                # Cálculo ESTRITAMENTE LÍQUIDO do PnL:
-                if is_win:
-                    self.logger.info(
-                        "🎉 Trade VENCEDOR em %s%s | Strike: %.5f | Close: %.5f | Stake: $%.2f | PnL Líquido: +$%.2f",
-                        par, gale_tag, strike, close_price, current_lote, pnl,
-                    )
-                    self.risk.register_trade_result(pnl=pnl, was_win=True)
-                    self.ui.add_trade_log(par, direcao, current_lote, pnl, True)
-                elif is_tie:
+                if win_str == "win" or profit_amount > amount:
+                    is_win, is_tie = True, False
+                    # BUG FIX #2: usa profit_amount real da corretora como base do lucro líquido
+                    pnl = round(profit_amount - amount, 2) if profit_amount > amount else round(lote * payout, 2)
+                elif win_str in {"equal", "tie"} or (profit_amount == amount and profit_amount > 0):
+                    is_win, is_tie = False, True
                     pnl = 0.0
-                    self.logger.info(
-                        "ℹ️ Trade EMPATADO em %s%s | Strike: %.5f | Close: %.5f | Stake: $%.2f | PnL: $0.00",
-                        par, gale_tag, strike, close_price, current_lote,
-                    )
-                    self.risk.register_trade_result(pnl=0.0, was_win=True)
-                    self.ui.add_trade_log(par, direcao, current_lote, 0.0, True)
                 else:
-                    pnl = -round(current_lote, 2)
-                    self.logger.warning(
-                        "⚠️ Trade PERDEDOR em %s%s | Strike: %.5f | Close: %.5f | Stake: $%.2f | PnL Líquido: -$%.2f",
-                        par, gale_tag, strike, close_price, current_lote, abs(pnl),
-                    )
-                    self.risk.register_trade_result(pnl=pnl, was_win=False)
-                    self.ui.add_trade_log(par, direcao, current_lote, abs(pnl), False)
+                    is_win, is_tie = False, False
+                    pnl = -round(lote, 2)
+            else:
+                # 2. Fallback: Aguarda término da expiração e consulta a vela exata que expirou (penúltima vela)
+                restante_agora = max(0, exp_ts - int(time.time())) if exp_ts else 0
+                if restante_agora > 0:
+                    await asyncio.sleep(restante_agora + 2.0)
 
-                if self.conector.__class__.__name__ != "DummyConector":
-                    saldo_atual = await self.conector.get_balance()
-                    self.risk.sync_balance(saldo_atual)
-
-                self.ui.update_risk(
-                    self.risk.banca_inicial, self.risk.banca_atual, self.risk.lucro_diario,
-                    self.risk.drawdown_diario_pct, self.config.gestao_risco.max_daily_drawdown_pct,
+                velas = await self.conector.get_candles(
+                    par=par, timeframe=self.config.trading.timeframe, contagem=3
                 )
-                self.ui.refresh()
-
-                if not is_tie:
-                    self.cerebro.recompensar(is_win)
-
-                if not is_tie and features_row is not None:
-                    self.learner.record_trade(features=features_row, direction=direcao, is_win=is_win, par=par)
-                    if self.learner.should_retrain_trades():
-                        asyncio.create_task(
-                            self.learner.run_learning_cycle(
-                                self.conector, self.ml, par_coleta=par, motivo="5 trades reais concluídos"
-                            )
-                        )
-
-                # Controle de fluxo do Martingale:
-                if is_win or is_tie:
-                    if current_gale > 0:
-                        self.logger.info("✅ [MARTINGALE RECUPERADO] Sucesso no Gale %d em %s! Ciclo concluído.", current_gale, par)
-                    break
-                else:
-                    if current_gale < max_gales:
-                        current_gale += 1
-                        current_lote = self.risk.calculate_gale_stake(current_lote)
-                        pode_operar, motivo = self.risk.can_trade()
-                        if not pode_operar:
-                            self.logger.warning("🚨 Martingale abortado pelas travas de risco: %s", motivo)
+                trade_candle = None
+                if velas and exp_ts:
+                    # Busca vela cujo início seja exatamente tf_seg segundos antes da expiração
+                    alvo_from = exp_ts - self._tf_seg
+                    for v in reversed(velas):
+                        if abs(v.get("from", 0) - alvo_from) <= 10:
+                            trade_candle = v
                             break
-                        if current_lote > self.risk.banca_atual:
-                            self.logger.warning(
-                                "🚨 Martingale abortado: Lote R$%.2f excede banca disponível de R$%.2f.",
-                                current_lote, self.risk.banca_atual,
-                            )
-                            break
-                        self.logger.warning(
-                            "🚨 [MARTINGALE GALE %d/%d] Disparando entrada imediata na próxima vela em %s (%s) | Lote: R$%.2f (%.1fx) | Exp: %dm",
-                            current_gale, max_gales, par, direcao, current_lote,
-                            getattr(self.config.gestao_risco, "martingale_multiplier", 2.2), exp_min,
+                if not trade_candle and velas:
+                    trade_candle = velas[-2] if len(velas) >= 2 else velas[-1]
+
+                close_price = float(trade_candle.get("close", 0.0)) if trade_candle else 0.0
+                dir_norm = direcao.strip().upper()
+                is_win = (close_price > strike) if dir_norm == "CALL" else (close_price < strike)
+                is_tie = (close_price == strike) or (strike <= 0.0 or close_price <= 0.0)
+                pnl = round(lote * payout, 2) if is_win else (-round(lote, 2) if not is_tie else 0.0)
+
+            # Cálculo ESTRITAMENTE LÍQUIDO do PnL:
+            # WIN: Lucro líquido = profit_amount - amount (da corretora) ou lote * payout
+            # LOSS: Perda líquida = -lote (fixo)
+            # EMPATE: $0.00 (stake devolvido, nenhuma variação de banca)
+            if is_win:
+                # pnl já calculado acima via opt_result ou fallback — apenas garante que não usa lote*payout bruto
+                self.logger.info(
+                    "🎉 Trade VENCEDOR em %s | Strike: %.5f | Close: %.5f | Stake: $%.2f | PnL Líquido: +$%.2f",
+                    par, strike, close_price, lote, pnl,
+                )
+                self.risk.register_trade_result(pnl=pnl, was_win=True)
+                self.ui.add_trade_log(par, direcao, lote, pnl, True)
+            elif is_tie:
+                pnl = 0.0
+                self.logger.info(
+                    "ℹ️ Trade EMPATADO em %s | Strike: %.5f | Close: %.5f | Stake: $%.2f | PnL: $0.00",
+                    par, strike, close_price, lote,
+                )
+                # BUG FIX #1: registra empate na UI e zera sequência de perdas
+                self.risk.register_trade_result(pnl=0.0, was_win=True)  # empate não é derrota
+                self.ui.add_trade_log(par, direcao, lote, 0.0, True)
+            else:
+                pnl = -round(lote, 2)
+                self.logger.warning(
+                    "⚠️ Trade PERDEDOR em %s | Strike: %.5f | Close: %.5f | Stake: $%.2f | PnL Líquido: -$%.2f",
+                    par, strike, close_price, lote, abs(pnl),
+                )
+                self.risk.register_trade_result(pnl=pnl, was_win=False)
+                self.ui.add_trade_log(par, direcao, lote, abs(pnl), False)
+
+            if self.conector.__class__.__name__ != "DummyConector":
+                saldo_atual = await self.conector.get_balance()
+                self.risk.sync_balance(saldo_atual)
+
+            self.ui.update_risk(
+                self.risk.banca_inicial, self.risk.banca_atual, self.risk.lucro_diario,
+                self.risk.drawdown_diario_pct, self.config.gestao_risco.max_daily_drawdown_pct,
+            )
+            self.ui.refresh()
+
+            if not is_tie:
+                self.cerebro.recompensar(is_win)
+
+            if not is_tie and features_row is not None:
+                self.learner.record_trade(features=features_row, direction=direcao, is_win=is_win, par=par)
+                if self.learner.should_retrain_trades():
+                    asyncio.create_task(
+                        self.learner.run_learning_cycle(
+                            self.conector, self.ml, par_coleta=par, motivo="5 trades reais concluídos"
                         )
-                        continue
-                    else:
-                        if max_gales > 0:
-                            self.logger.warning("❌ [MARTINGALE STOP] Ciclo encerrou em perda após %d Gales em %s.", max_gales, par)
-                        break
+                    )
         except Exception as exc:
             self.logger.error("Erro na ordem de %s (%s): %s", par, direcao, exc)
             self.risk.register_trade_result(pnl=-lote, was_win=False)
@@ -642,11 +604,8 @@ class BotOrchestrator:
 
             if cerebro_res.entrar:
                 lote_base = self.risk.calculate_position_size(win_probability=prob_win, payout=payout)
-                # No Martingale, o lote_base é a mão inicial (5% da banca sem divisão)
-                if getattr(self.config.gestao_risco, "martingale_enabled", False):
-                    lote = lote_base
-                else:
-                    lote = max(1.0, round(lote_base / self._max_simultaneous, 2))
+                # Divide pelo máx de simultâneos para manter risco total constante
+                lote = max(1.0, round(lote_base / self._max_simultaneous, 2))
                 if lote > 0:
                     self.logger.info(
                         "📊 [%s] %s → %s | Lote: $%.2f (base $%.2f / %d simult.) | P(Win): %.1f%%",
