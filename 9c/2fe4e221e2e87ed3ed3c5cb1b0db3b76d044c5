@@ -1,0 +1,14 @@
+.env.example
+  h_a9c79159c35312 72-73,78-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9c2fe4e221e2e87ed3ed3c5cb1b0db3b76d044c5",
+  "prompts": {},
+  "humans": {
+    "h_a9c79159c35312": {
+      "author": "Fran981259 <comunidadetrader@gmail.com>"
+    }
+  }
+}
