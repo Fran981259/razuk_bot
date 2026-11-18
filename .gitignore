@@ -9,6 +9,8 @@ node_modules/
 .env
 .env*.local
 .session_ssid
+.olymp_token
+*.token
 *.pem
 *.key
 
