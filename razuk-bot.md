@@ -103,5 +103,5 @@ requirements.txt    → Dependências Python do projeto
 - [x] Bug fix MicroSniper Telemetria: Subscrição dinâmica de streaming `candle-generated` no WebSocket e eliminação de cache estático no `get_current_price`
 - [x] Resolução Nativa Multi-Timeframe M15: Coleta direta de 100 velas nativas por timeframe, eliminando erro de DataFrame curto (33 < 85)
 
-## Last updated: 2026-11-05 (Retreino de Modelo com Target Real `is_win`, 26 Features e Deploy na VPS)
+## Last updated: 2026-11-18 (Reversão completa da estratégia Martingale; restauração do gerenciamento de risco padrão com stake fixa e limite diário de 5%)
 
