@@ -1,0 +1,22 @@
+config.py
+  h_a9c79159c35312 296,299-300,315-345
+main.py
+  h_a9c79159c35312 103-106,208-213,215,217-229,231-241,243-312,314-319,321-327,329-331,333-337,339-340,342-349,351-373,375-379,645-649
+razuk-bot.md
+  h_a9c79159c35312 76,106,108
+risk.py
+  h_a9c79159c35312 113-123,162-167
+test_martingale.py
+  h_a9c79159c35312 1-127
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f036eade7c0b9141a6de0d875fcfc21c55989467",
+  "prompts": {},
+  "humans": {
+    "h_a9c79159c35312": {
+      "author": "Fran981259 <comunidadetrader@gmail.com>"
+    }
+  }
+}
